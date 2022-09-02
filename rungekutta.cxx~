@@ -1,0 +1,95 @@
+/*
+ * 4th order Runge-Kutta algorithm. 
+ * Author Jan Hansen
+ * 27.04.2013
+ */
+
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+//Functions
+double* f(const double tn, const double y1, const double y2);
+void RKstep(double* y, const double tn, const double dt);
+void output(double* y, const int N, const double dt, const string name);
+
+
+int main(){	
+  // Initial conditions
+  const double x0=1;
+  const double dx0=0;
+  // define pi
+  const double pi  =3.141592653589793238462;
+  // End-Time
+  const double tend = 6*pi;
+  // Number of steps
+  const int N = 100000;
+  // length of timestep
+  const double dt = tend/N;
+
+  // Create array to store values 
+  double* y = new double [2*N];
+  
+  // Store values for t=0
+  y[0]=x0;
+  y[1]=dx0;
+  
+  // do N runge kutta steps
+  for(int i = 0; i < 2*N - 2; i += 2){
+	RKstep(&y[i],(double(i)/2.0)*dt,dt);
+  }
+  // print y to a file
+  output(y,N,dt,"rk.dat");
+  
+  //free allocated memory
+  delete[] y;
+  
+  return 0;
+}
+
+// creates an array with two entrys according to y1 = y2 and y2 = -y1.
+double* f(const double tn, const double y1, const double y2){
+	double* y = new double[2];
+	y[0] = y2;
+	y[1] = -y1;
+	return y;
+}
+// one step of the 4th order Runge-Kutta Scheme.
+void RKstep(double* y,const double tn, const double dt){
+  
+	// create two entry arrays k with help of function f
+	const double* k1 = f(tn, y[0], y[1]);
+	const double* k2 = f(tn + dt/2.0, y[0] + k1[0]/2.0, y[1] + k1[1]/2.0);
+	const double* k3 = f(tn + dt/2.0, y[0] + k2[0]/2.0, y[1] + k2[1]/2.0);
+	const double* k4 = f(tn + dt, y[0] + k3[0], y[1] + k3[1]);
+	
+	// do one runge kutta step 
+	y[2] = y[0] + (1.0/6.0)*dt*(k1[0]+2*(k2[0]+k3[0])+k4[0]);
+	y[3] = y[1] + (1.0/6.0)*dt*(k1[1]+2*(k2[1]+k3[1])+k4[1]);
+	
+	// free k arrays
+	delete[] k1;
+	delete[] k2;
+	delete[] k3;
+	delete[] k4;
+}
+
+// prints array to file
+void output(double* y,const int N,const double dt, const string name){
+  ofstream out(name.c_str());
+  for(int i=0; i<2*N; i+=2){
+	out<<dt*double(i)/2<<"\t"<<y[i]<<"\t"<<y[i+1]<<endl;
+  }
+  out.close();
+}
+
+
+
+
+
+
+
+
+
